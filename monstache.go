@@ -1336,7 +1336,29 @@ func (ic *indexClient) processRelated(root *gtm.Op) (err error) {
 							}
 						}
 						if visit {
-							q = append(q, rop)
+							// Indexing mutates the operation "Data" object which breaks
+							// the relations processing of the same operation if it happens
+							// after the indexing. To avoid that collision copy the operation
+							// for a further operation processing and let Indexing to mutate
+							// its own copy of the operation 
+							qop := &gtm.Op{
+								Id:                rop.Id,
+								Operation:         rop.Operation,
+								Namespace:         rop.Namespace,
+								Source:            rop.Source,
+								Timestamp:         rop.Timestamp,
+								UpdateDescription: rop.UpdateDescription,
+							}
+							var data []byte
+							data, err = bson.Marshal(rop.Data)
+							if err == nil {
+								var m map[string]interface{}
+								err = bson.Unmarshal(data, &m)
+								if err == nil {
+									qop.Data = m
+								}
+							}
+							q = append(q, qop)
 						}
 					}
 					if !skip {
