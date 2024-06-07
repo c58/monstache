@@ -1233,7 +1233,7 @@ func (ic *indexClient) processRelated(root *gtm.Op) (err error) {
 			if len(rs) == 0 {
 				continue
 			}
-      		visited[op.Id] = true
+			visited[op.Id] = true
 			for _, r := range rs {
 				if r.MaxDepth > 0 && r.MaxDepth < depth {
 					continue
