@@ -1220,6 +1220,7 @@ func convertSrcDataToMatchFieldType(srcData interface{}, matchFieldType string) 
 
 func (ic *indexClient) processRelated(root *gtm.Op) (err error) {
 	var q []*gtm.Op
+	visited := map[interface{}]bool{}
 	batch := []*gtm.Op{root}
 	depth := 1
 	for len(batch) > 0 {
@@ -1232,6 +1233,7 @@ func (ic *indexClient) processRelated(root *gtm.Op) (err error) {
 			if len(rs) == 0 {
 				continue
 			}
+      		visited[op.Id] = true
 			for _, r := range rs {
 				if r.MaxDepth > 0 && r.MaxDepth < depth {
 					continue
@@ -1334,6 +1336,10 @@ func (ic *indexClient) processRelated(root *gtm.Op) (err error) {
 							if r2.MaxDepth < 1 || r2.MaxDepth >= (depth+1) {
 								visit = true
 							}
+						}
+						_, alreadyVisited := visited[rop.Id]
+						if alreadyVisited {
+							visit = false
 						}
 						if visit {
 							// Indexing mutates the operation "Data" object which breaks
